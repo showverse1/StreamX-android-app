@@ -57,6 +57,7 @@ import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Subtitles
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -665,11 +666,20 @@ fun NativeVideoPlayerBox(
     var mediaPlayerRef by remember { mutableStateOf<MediaPlayer?>(null) }
 
     // Pro player features
+    var isBuffering by remember { mutableStateOf(false) }
     var isScreenLocked by remember { mutableStateOf(false) }
     var aspectRatioMode by remember { mutableStateOf(PlayerAspectRatio.FIT) }
     var playbackSpeed by remember { mutableFloatStateOf(1.0f) }
     var seekFeedbackText by remember { mutableStateOf<String?>(null) }
     var feedbackToastText by remember { mutableStateOf<String?>(null) }
+
+    // Auto-dismiss buffer spinner
+    LaunchedEffect(isBuffering) {
+        if (isBuffering) {
+            delay(900)
+            isBuffering = false
+        }
+    }
 
     // Dismiss seek indicator
     LaunchedEffect(seekFeedbackText) {
@@ -820,6 +830,15 @@ fun NativeVideoPlayerBox(
                                     }
                                 }
 
+                                setOnInfoListener { _, what, _ ->
+                                    if (what == MediaPlayer.MEDIA_INFO_BUFFERING_START) {
+                                        isBuffering = true
+                                    } else if (what == MediaPlayer.MEDIA_INFO_BUFFERING_END) {
+                                        isBuffering = false
+                                    }
+                                    true
+                                }
+
                                 try {
                                     val uri = if (videoUrl.isNotBlank()) {
                                         Uri.parse(videoUrl)
@@ -881,6 +900,24 @@ fun NativeVideoPlayerBox(
                         }
                     }
                 }
+            }
+        }
+
+        // Center Buffering Spinner (Pure icon spinner, zero text)
+        if (isBuffering) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(56.dp)
+                    .background(Color.Black.copy(alpha = 0.72f), CircleShape)
+                    .border(1.5.dp, NeonCyan.copy(alpha = 0.85f), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(32.dp),
+                    color = NeonCyan,
+                    strokeWidth = 3.dp
+                )
             }
         }
 
@@ -1034,6 +1071,27 @@ fun NativeVideoPlayerBox(
                                 imageVector = Icons.Default.Lock,
                                 contentDescription = "Lock Screen",
                                 tint = TextSecondary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+
+                        // Buffer Stream Icon Button (Pure icon, zero text)
+                        IconButton(
+                            onClick = {
+                                isBuffering = true
+                                try {
+                                    val target = (currentPositionMs + 1000).coerceAtMost(durationMs)
+                                    videoViewRef?.seekTo(target)
+                                } catch (_: Throwable) {}
+                            },
+                            modifier = Modifier
+                                .size(36.dp)
+                                .testTag("buffer_stream_button")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Sync,
+                                contentDescription = "Buffer Stream",
+                                tint = if (isBuffering) NeonCyan else TextSecondary,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -1307,40 +1365,27 @@ fun NativeVideoPlayerBox(
                             QualityPill(text = aspectRatioMode.label, isNeon = false)
                             Spacer(modifier = Modifier.width(8.dp))
 
-                            // Prominent Dedicated Landscape Mode Button
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(NeonCyan.copy(alpha = 0.2f))
-                                    .border(1.2.dp, NeonCyan, RoundedCornerShape(8.dp))
-                                    .clickable {
-                                        if (isLandscape) {
-                                            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-                                            feedbackToastText = "Portrait Mode"
-                                        } else {
-                                            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-                                            feedbackToastText = "Fullscreen Landscape Cinema"
-                                        }
+                            // Dedicated Landscape/Fullscreen Icon Button (Pure icon, no text)
+                            IconButton(
+                                onClick = {
+                                    if (isLandscape) {
+                                        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                                        feedbackToastText = "Portrait Mode"
+                                    } else {
+                                        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                                        feedbackToastText = "Fullscreen Landscape Cinema"
                                     }
-                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                                },
+                                modifier = Modifier
+                                    .size(36.dp)
                                     .testTag("landscape_bottom_button")
                             ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        imageVector = if (isLandscape) Icons.Default.FullscreenExit else Icons.Default.Fullscreen,
-                                        contentDescription = if (isLandscape) "Exit Landscape" else "Landscape Mode",
-                                        tint = NeonCyan,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = if (isLandscape) "PORTRAIT" else "LANDSCAPE",
-                                        color = NeonCyan,
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Black,
-                                        letterSpacing = 0.5.sp
-                                    )
-                                }
+                                Icon(
+                                    imageVector = if (isLandscape) Icons.Default.FullscreenExit else Icons.Default.Fullscreen,
+                                    contentDescription = if (isLandscape) "Exit Landscape" else "Landscape Mode",
+                                    tint = NeonCyan,
+                                    modifier = Modifier.size(24.dp)
+                                )
                             }
                         }
                     }
