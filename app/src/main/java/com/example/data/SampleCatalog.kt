@@ -1,12 +1,12 @@
 package com.example.data
 
 object SampleCatalog {
-    // Reliable bundled local MP4 test stream guaranteeing offline & emulator playback without MediaPlayer errors
-    const val LOCAL_STREAM_URI = "android.resource://com.example/raw/sample_stream"
-    private const val STREAM_ANIMATION = LOCAL_STREAM_URI
-    private const val STREAM_SCIFI = LOCAL_STREAM_URI
-    private const val STREAM_FANTASY = LOCAL_STREAM_URI
-    private const val STREAM_NATURE = LOCAL_STREAM_URI
+    // Real high-quality MP4 streams for streaming playback
+    const val LOCAL_STREAM_URI = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+    private const val STREAM_ANIMATION = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
+    private const val STREAM_SCIFI = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"
+    private const val STREAM_FANTASY = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
+    private const val STREAM_NATURE = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4"
 
     val featuredShow = Show(
         id = "show_solo_leveling",

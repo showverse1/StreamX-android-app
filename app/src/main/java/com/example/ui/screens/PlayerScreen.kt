@@ -435,19 +435,65 @@ fun PlayerScreen(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Horizontal Episode Selector Cards
+                // Horizontal Episode Square Chips: E1, E2, E3...
                 LazyRow(
                     contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     items(currentSeason.episodes) { ep ->
                         val isPlaying = ep.id == currentEpisode.id
-
-                        EpisodeSelectorCard(
-                            episode = ep,
+                        EpisodeSquareChip(
+                            episodeNumber = ep.episodeNumber,
                             isPlaying = isPlaying,
                             onClick = { onEpisodeSelected(ep) }
                         )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Active Episode Info Card
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(DarkSurfaceElevated)
+                        .border(1.dp, DarkBorder, RoundedCornerShape(12.dp))
+                        .padding(14.dp)
+                ) {
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Episode ${currentEpisode.episodeNumber}: ${currentEpisode.title}",
+                                color = TextPrimary,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = currentEpisode.durationText,
+                                color = NeonCyan,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                        if (currentEpisode.summary.isNotBlank()) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = currentEpisode.summary,
+                                color = TextSecondary,
+                                fontSize = 12.sp,
+                                lineHeight = 16.sp,
+                                maxLines = 2
+                            )
+                        }
                     }
                 }
             }
@@ -518,113 +564,42 @@ fun PlayerScreen(
 }
 
 @Composable
-fun EpisodeSelectorCard(
-    episode: Episode,
+fun EpisodeSquareChip(
+    episodeNumber: Int,
     isPlaying: Boolean,
     onClick: () -> Unit
 ) {
-    // The playing episode must have a glowing Neon Cyan border (#00F0FF)
     val borderColor = if (isPlaying) NeonCyan else DarkBorder
-    val borderWidth = if (isPlaying) 2.dp else 1.dp
+    val borderWidth = if (isPlaying) 1.5.dp else 1.dp
+    val bgColor = if (isPlaying) NeonCyan.copy(alpha = 0.2f) else DarkSurfaceElevated
 
     Box(
         modifier = Modifier
-            .width(180.dp)
-            .testTag("episode_card_${episode.episodeNumber}")
-            .then(
-                if (isPlaying) {
-                    Modifier.drawBehind {
-                        drawCircle(
-                            color = NeonCyanGlow,
-                            radius = size.maxDimension * 0.65f,
-                            center = center
-                        )
-                    }
-                } else Modifier
-            )
-            .clip(RoundedCornerShape(12.dp))
-            .background(if (isPlaying) NeonCyanSubtle else DarkSurfaceElevated)
-            .border(borderWidth, borderColor, RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick)
+            .size(52.dp)
+            .testTag("episode_square_$episodeNumber")
+            .clip(RoundedCornerShape(10.dp))
+            .background(bgColor)
+            .border(borderWidth, borderColor, RoundedCornerShape(10.dp))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
     ) {
-        Column {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(95.dp)
-            ) {
-                AsyncImage(
-                    model = episode.thumbnailUrl,
-                    contentDescription = episode.title,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-
-                // Playing badge or Episode number badge
-                if (isPlaying) {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.TopStart)
-                            .padding(6.dp)
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(NeonCyan)
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                    ) {
-                        Text(
-                            text = "NOW PLAYING",
-                            color = Color(0xFF001B20),
-                            fontSize = 9.sp,
-                            fontWeight = FontWeight.Black
-                        )
-                    }
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.TopStart)
-                            .padding(6.dp)
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(Color.Black.copy(alpha = 0.7f))
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                    ) {
-                        Text(
-                            text = "EP ${episode.episodeNumber}",
-                            color = TextPrimary,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-
-                // Runtime overlay
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "E$episodeNumber",
+                color = if (isPlaying) NeonCyan else TextPrimary,
+                fontSize = 15.sp,
+                fontWeight = if (isPlaying) FontWeight.Black else FontWeight.Bold,
+                letterSpacing = 0.5.sp
+            )
+            if (isPlaying) {
+                Spacer(modifier = Modifier.height(3.dp))
                 Box(
                     modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(6.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(Color.Black.copy(alpha = 0.75f))
-                        .padding(horizontal = 5.dp, vertical = 2.dp)
-                ) {
-                    Text(
-                        text = episode.durationText,
-                        color = TextSecondary,
-                        fontSize = 10.sp
-                    )
-                }
-            }
-
-            Column(modifier = Modifier.padding(10.dp)) {
-                Text(
-                    text = "${episode.episodeNumber}. ${episode.title}",
-                    color = if (isPlaying) NeonCyan else TextPrimary,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = "${episode.downloadSizeMb} MB • 1080p",
-                    color = TextMuted,
-                    fontSize = 10.sp
+                        .size(4.dp)
+                        .background(NeonCyan, CircleShape)
                 )
             }
         }
@@ -861,43 +836,19 @@ fun NativeVideoPlayerBox(
                     )
                 }
 
-                // Cyberpunk visualizer if player is standby or synthetic
-                if (isPlayerError || !isPlayerPrepared) {
+                // Clean background while video initializes (No dummy text or fake watermark)
+                if (!isPlayerPrepared && !isPlayerError) {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(
-                                Brush.radialGradient(
-                                    colors = listOf(NeonCyan.copy(alpha = 0.12f), Color.Transparent)
-                                )
-                            )
+                            .background(Color.Black),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .align(Alignment.Center)
-                                .clip(RoundedCornerShape(20.dp))
-                                .background(Color(0xFF0A0A0F).copy(alpha = 0.85f))
-                                .border(1.dp, NeonCyan.copy(alpha = 0.7f), RoundedCornerShape(20.dp))
-                                .padding(horizontal = 14.dp, vertical = 6.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(8.dp)
-                                    .drawBehind {
-                                        drawCircle(color = NeonCyan, radius = size.minDimension / 2)
-                                        drawCircle(color = NeonCyanGlow, radius = size.minDimension * 0.9f)
-                                    }
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = if (isPlaying) "STREAMX 1080P MASTER • TEST VIDEO" else "PAUSED",
-                                color = NeonCyan,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Black,
-                                letterSpacing = 0.8.sp
-                            )
-                        }
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(32.dp),
+                            color = NeonCyan,
+                            strokeWidth = 2.5.dp
+                        )
                     }
                 }
             }
@@ -1053,10 +1004,10 @@ fun NativeVideoPlayerBox(
                         }
                     }
 
-                    // Action buttons row: Lock, Aspect Ratio, Speed, Subtitles, Landscape/Fullscreen
+                    // Action buttons row: Lock, Buffer, Aspect Ratio, Speed, Subtitles
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
                         // Lock Controls Button
                         IconButton(
@@ -1065,13 +1016,15 @@ fun NativeVideoPlayerBox(
                                 showControls = false
                                 feedbackToastText = "Screen Locked"
                             },
-                            modifier = Modifier.testTag("lock_screen_button")
+                            modifier = Modifier
+                                .size(30.dp)
+                                .testTag("lock_screen_button")
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Lock,
                                 contentDescription = "Lock Screen",
                                 tint = TextSecondary,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(16.dp)
                             )
                         }
 
@@ -1085,23 +1038,23 @@ fun NativeVideoPlayerBox(
                                 } catch (_: Throwable) {}
                             },
                             modifier = Modifier
-                                .size(36.dp)
+                                .size(30.dp)
                                 .testTag("buffer_stream_button")
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Sync,
                                 contentDescription = "Buffer Stream",
                                 tint = if (isBuffering) NeonCyan else TextSecondary,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(16.dp)
                             )
                         }
 
                         // Aspect Ratio Cycle Button: FIT -> STRETCH -> CROP -> 21:9
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
+                                .clip(RoundedCornerShape(6.dp))
                                 .background(DarkSurfaceElevated)
-                                .border(1.dp, NeonCyan.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                                .border(1.dp, NeonCyan.copy(alpha = 0.5f), RoundedCornerShape(6.dp))
                                 .clickable {
                                     val nextMode = when (aspectRatioMode) {
                                         PlayerAspectRatio.FIT -> PlayerAspectRatio.STRETCH
@@ -1110,23 +1063,23 @@ fun NativeVideoPlayerBox(
                                         PlayerAspectRatio.CINEMA_21_9 -> PlayerAspectRatio.FIT
                                     }
                                     aspectRatioMode = nextMode
-                                    feedbackToastText = "Aspect Ratio: ${nextMode.label} • ${nextMode.description}"
+                                    feedbackToastText = "Aspect Ratio: ${nextMode.label}"
                                 }
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                                .testTag("aspect_ratio_button")
+                            .padding(horizontal = 6.dp, vertical = 3.dp)
+                            .testTag("aspect_ratio_button")
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
                                     imageVector = Icons.Default.AspectRatio,
                                     contentDescription = "Aspect Ratio",
                                     tint = NeonCyan,
-                                    modifier = Modifier.size(14.dp)
+                                    modifier = Modifier.size(12.dp)
                                 )
-                                Spacer(modifier = Modifier.width(4.dp))
+                                Spacer(modifier = Modifier.width(3.dp))
                                 Text(
                                     text = aspectRatioMode.label,
                                     color = TextPrimary,
-                                    fontSize = 11.sp,
+                                    fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -1135,9 +1088,9 @@ fun NativeVideoPlayerBox(
                         // Playback Speed Button: Cycles 0.75x -> 1.0x -> 1.25x -> 1.5x -> 2.0x -> 0.5x
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
+                                .clip(RoundedCornerShape(6.dp))
                                 .background(DarkSurfaceElevated)
-                                .border(1.dp, DarkBorder, RoundedCornerShape(8.dp))
+                                .border(1.dp, DarkBorder, RoundedCornerShape(6.dp))
                                 .clickable {
                                     val speeds = listOf(0.75f, 1.0f, 1.25f, 1.5f, 2.0f, 0.5f)
                                     val curIndex = speeds.indexOfFirst { kotlin.math.abs(it - playbackSpeed) < 0.05f }
@@ -1149,23 +1102,23 @@ fun NativeVideoPlayerBox(
                                                 ?: PlaybackParams().setSpeed(nextSpeed)
                                         } catch (_: Throwable) {}
                                     }
-                                    feedbackToastText = "Playback Speed: ${nextSpeed}x"
+                                    feedbackToastText = "${nextSpeed}x"
                                 }
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                                .testTag("playback_speed_button")
+                            .padding(horizontal = 6.dp, vertical = 3.dp)
+                            .testTag("playback_speed_button")
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
                                     imageVector = Icons.Default.Speed,
                                     contentDescription = "Speed",
                                     tint = NeonCyan,
-                                    modifier = Modifier.size(14.dp)
+                                    modifier = Modifier.size(12.dp)
                                 )
-                                Spacer(modifier = Modifier.width(4.dp))
+                                Spacer(modifier = Modifier.width(3.dp))
                                 Text(
                                     text = "${playbackSpeed}x",
                                     color = TextPrimary,
-                                    fontSize = 11.sp,
+                                    fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -1173,43 +1126,25 @@ fun NativeVideoPlayerBox(
 
                         // Subtitle / Audio Button
                         onOpenAudioSubtitles?.let {
-                            IconButton(onClick = it) {
+                            IconButton(
+                                onClick = it,
+                                modifier = Modifier.size(30.dp)
+                            ) {
                                 Icon(
                                     imageVector = Icons.Default.Subtitles,
                                     contentDescription = "Audio & Subtitles",
                                     tint = TextSecondary,
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(16.dp)
                                 )
                             }
-                        }
-
-                        // Landscape Fullscreen Toggle Button
-                        IconButton(
-                            onClick = {
-                                if (isLandscape) {
-                                    activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-                                    feedbackToastText = "Portrait Mode"
-                                } else {
-                                    activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-                                    feedbackToastText = "Fullscreen Cinema Mode"
-                                }
-                            },
-                            modifier = Modifier.testTag("fullscreen_toggle_button")
-                        ) {
-                            Icon(
-                                imageVector = if (isLandscape) Icons.Default.FullscreenExit else Icons.Default.Fullscreen,
-                                contentDescription = if (isLandscape) "Exit Fullscreen" else "Enter Fullscreen",
-                                tint = NeonCyan,
-                                modifier = Modifier.size(24.dp)
-                            )
                         }
                     }
                 }
 
-                // CENTER CONTROLS: Prev Episode, -10s, Play/Pause, +10s, Next Episode
+                // CENTER CONTROLS: Prev Episode, -10s, Play/Pause, +10s, Next Episode (Clean, compact, clear look)
                 Row(
                     modifier = Modifier.align(Alignment.Center),
-                    horizontalArrangement = Arrangement.spacedBy(if (isLandscape) 36.dp else 20.dp),
+                    horizontalArrangement = Arrangement.spacedBy(if (isLandscape) 28.dp else 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Previous Episode
@@ -1217,13 +1152,14 @@ fun NativeVideoPlayerBox(
                         onClick = { onPreviousEpisode?.invoke() },
                         enabled = onPreviousEpisode != null,
                         modifier = Modifier
-                            .size(42.dp)
-                            .background(Color.Black.copy(alpha = 0.6f), CircleShape)
+                            .size(32.dp)
+                            .background(Color.Black.copy(alpha = 0.5f), CircleShape)
                     ) {
                         Icon(
                             imageVector = Icons.Default.SkipPrevious,
                             contentDescription = "Previous Episode",
-                            tint = if (onPreviousEpisode != null) TextPrimary else TextMuted
+                            tint = if (onPreviousEpisode != null) TextPrimary else TextMuted,
+                            modifier = Modifier.size(16.dp)
                         )
                     }
 
@@ -1236,17 +1172,18 @@ fun NativeVideoPlayerBox(
                             seekFeedbackText = "-10s"
                         },
                         modifier = Modifier
-                            .size(46.dp)
-                            .background(Color.Black.copy(alpha = 0.6f), CircleShape)
+                            .size(36.dp)
+                            .background(Color.Black.copy(alpha = 0.55f), CircleShape)
                     ) {
                         Icon(
                             imageVector = Icons.Default.FastRewind,
                             contentDescription = "Rewind 10s",
-                            tint = TextPrimary
+                            tint = TextPrimary,
+                            modifier = Modifier.size(18.dp)
                         )
                     }
 
-                    // Play/Pause button
+                    // Play/Pause button (Sleek translucent glass button, no bulky obscuring glow)
                     IconButton(
                         onClick = {
                             if (isPlaying) {
@@ -1258,22 +1195,16 @@ fun NativeVideoPlayerBox(
                             }
                         },
                         modifier = Modifier
-                            .size(64.dp)
-                            .drawBehind {
-                                drawCircle(
-                                    color = NeonCyanGlow,
-                                    radius = size.maxDimension * 0.7f,
-                                    center = center
-                                )
-                            }
-                            .background(NeonCyan, CircleShape)
+                            .size(48.dp)
+                            .background(Color.Black.copy(alpha = 0.65f), CircleShape)
+                            .border(1.5.dp, NeonCyan, CircleShape)
                             .testTag("play_pause_button")
                     ) {
                         Icon(
                             imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                             contentDescription = if (isPlaying) "Pause" else "Play",
-                            tint = Color(0xFF001B20),
-                            modifier = Modifier.size(36.dp)
+                            tint = NeonCyan,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
 
@@ -1286,13 +1217,14 @@ fun NativeVideoPlayerBox(
                             seekFeedbackText = "+10s"
                         },
                         modifier = Modifier
-                            .size(46.dp)
-                            .background(Color.Black.copy(alpha = 0.6f), CircleShape)
+                            .size(36.dp)
+                            .background(Color.Black.copy(alpha = 0.55f), CircleShape)
                     ) {
                         Icon(
                             imageVector = Icons.Default.FastForward,
                             contentDescription = "Forward 10s",
-                            tint = TextPrimary
+                            tint = TextPrimary,
+                            modifier = Modifier.size(18.dp)
                         )
                     }
 
@@ -1301,23 +1233,24 @@ fun NativeVideoPlayerBox(
                         onClick = { onNextEpisode?.invoke() },
                         enabled = onNextEpisode != null,
                         modifier = Modifier
-                            .size(42.dp)
-                            .background(Color.Black.copy(alpha = 0.6f), CircleShape)
+                            .size(32.dp)
+                            .background(Color.Black.copy(alpha = 0.5f), CircleShape)
                     ) {
                         Icon(
                             imageVector = Icons.Default.SkipNext,
                             contentDescription = "Next Episode",
-                            tint = if (onNextEpisode != null) TextPrimary else TextMuted
+                            tint = if (onNextEpisode != null) TextPrimary else TextMuted,
+                            modifier = Modifier.size(16.dp)
                         )
                     }
                 }
 
-                // BOTTOM CONTROLS: Slider, Timers, Skip Intro button
+                // BOTTOM CONTROLS: Slider, Timers, Clean Fullscreen button
                 Column(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = if (isLandscape) 12.dp else 8.dp)
+                        .padding(horizontal = 16.dp, vertical = if (isLandscape) 10.dp else 6.dp)
                 ) {
                     val progressFraction = if (durationMs > 0) (currentPositionMs.toFloat() / durationMs.toFloat()) else 0f
 
@@ -1335,7 +1268,7 @@ fun NativeVideoPlayerBox(
                         ),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(20.dp)
+                            .height(16.dp)
                             .testTag("video_progress_slider")
                     )
 
@@ -1348,45 +1281,37 @@ fun NativeVideoPlayerBox(
                             Text(
                                 text = formatTime(currentPositionMs),
                                 color = NeonCyan,
-                                fontSize = 11.sp,
+                                fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
                                 text = " / ${formatTime(durationMs)}",
                                 color = TextSecondary,
-                                fontSize = 11.sp
+                                fontSize = 10.sp
                             )
                         }
 
-                        // Quality, aspect tag & Prominent Landscape/Fullscreen Button
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            QualityPill(text = "1080P MASTER", isNeon = true)
-                            Spacer(modifier = Modifier.width(6.dp))
-                            QualityPill(text = aspectRatioMode.label, isNeon = false)
-                            Spacer(modifier = Modifier.width(8.dp))
-
-                            // Dedicated Landscape/Fullscreen Icon Button (Pure icon, no text)
-                            IconButton(
-                                onClick = {
-                                    if (isLandscape) {
-                                        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-                                        feedbackToastText = "Portrait Mode"
-                                    } else {
-                                        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-                                        feedbackToastText = "Fullscreen Landscape Cinema"
-                                    }
-                                },
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .testTag("landscape_bottom_button")
-                            ) {
-                                Icon(
-                                    imageVector = if (isLandscape) Icons.Default.FullscreenExit else Icons.Default.Fullscreen,
-                                    contentDescription = if (isLandscape) "Exit Landscape" else "Landscape Mode",
-                                    tint = NeonCyan,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
+                        // Compact Dedicated Landscape/Fullscreen Icon Button (Pure icon, clean look)
+                        IconButton(
+                            onClick = {
+                                if (isLandscape) {
+                                    activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                                    feedbackToastText = "Portrait Mode"
+                                } else {
+                                    activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                                    feedbackToastText = "Fullscreen Cinema"
+                                }
+                            },
+                            modifier = Modifier
+                                .size(32.dp)
+                                .testTag("landscape_bottom_button")
+                        ) {
+                            Icon(
+                                imageVector = if (isLandscape) Icons.Default.FullscreenExit else Icons.Default.Fullscreen,
+                                contentDescription = if (isLandscape) "Exit Landscape" else "Landscape Mode",
+                                tint = NeonCyan,
+                                modifier = Modifier.size(20.dp)
+                            )
                         }
                     }
                 }
