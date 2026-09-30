@@ -1,0 +1,6 @@
+{
+  "name": "StreamX",
+  "description": "Hyper-premium native streaming platform with 4K HDR playback, offline vault, and curated anime, Kdrama, and cinema.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
